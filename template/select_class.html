@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Select Class</title>
+    <style>
+      @import url('https://fonts.googleapis.com/css2?family=Montserrat&display=swap');
+        body {
+            font-family:'Montserrat', serif;
+            margin: 0;
+            padding: 0;
+            background-image: url('https://www.twog-architecture.com/Data/Sites/1/Product/51/vgu-5.jpg');
+            background-repeat: no-repeat;
+            background-attachment: fixed;
+            background-size: cover;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+        form {
+            background-color: rgba(231, 167, 149, 0.875);
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0px 0px 10px 0px rgba(0,0,0,0.1);
+            width: 300px;
+        }
+        h1 {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        select, input[type="submit"] {
+            display: block;
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 10px;
+            border-radius: 4px;
+            border: 1px solid #141313;
+            box-sizing: border-box;
+        }
+        input[type="submit"] {
+            background-color: #803616;
+            color: rgb(241, 226, 226);
+            cursor: pointer;
+        }
+        input[type="submit"]:hover {
+            background-color: #a07545;
+        }
+    </style>
+</head>
+<body>
+    <form action="/select_class" method="post">
+        <h1>Select the class you will attend now</h1>
+        <select name="classes" required>
+            <option value="">Select a class</option>
+            <option value="Multidisciplinary">Multidisciplinary Project</option>
+            <option value="IT">Information Technology</option>>
+            <option value="German">German</option>>
+        
+        </select>
+            
+        <input type="submit" value="Submit">
+    </form>
+</body>
+</html>

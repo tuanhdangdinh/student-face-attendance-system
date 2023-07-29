@@ -1,0 +1,6 @@
+teacher:
+  password_hash: pbkdf2:sha256:600000$WDzmT1yn1PdwrIg0$9cec14c1cc937f02ffcfd36e60de31b8b9aa76932539e421a97fc6cfedb995da
+firebase:
+  databaseURL: https://the-project-80369-default-rtdb.asia-southeast1.firebasedatabase.app
+  storageBucket: the-project-80369.appspot.com
+  pathToServiceAccount: /Users/tuanhdangdinh/Documents/face_recognition/configs/the-project-80369-firebase-adminsdk-8dvtw-66500c43b9.json

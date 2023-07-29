@@ -1,3 +1,5 @@
+from random import random
+from typing import List
 from flask import Flask, render_template
 from flask import request, redirect, url_for, Response, flash
 from werkzeug.security import check_password_hash
@@ -9,9 +11,43 @@ import firebase_admin
 from firebase_admin import credentials
 from firebase_admin import db
 from firebase_admin import storage
-from detection.face_matching import detect_faces, align_face
-from detection.face_matching import extract_features, match_face
+from detection.face_recognition import detect_faces, align_face
+from detection.face_recognition import extract_features, match_face
 from utils.configuration import load_yaml
+# mqtt
+import time
+import sys
+import numpy as np
+import base64
+from PIL import Image
+from Adafruit_IO import MQTTClient
+from datetime import date, datetime
+import io
+import imghdr
+
+AIO_FEED_ID = ["Today", "Time", "Humidity", "Temperature", "AI_Camera"]
+AIO_USERNAME = "NhanVGU"
+AIO_KEY = ""
+
+
+def connected(client):
+    print("Connected to server!!!")
+    for things in AIO_FEED_ID:
+        client.subscribe(things)
+
+
+def subscribe(client, userdata, mid, granted_qos):
+    print("Subscribe successfully ...")
+
+
+def disconnected(client):
+    print("Disconnected ...")
+    sys.exit(1)
+
+
+def message(client, feed_id, payload):
+    print(f"AI result from {feed_id} : {payload}")
+
 
 config_file_path = load_yaml("configs/database.yaml")
 
@@ -356,7 +392,66 @@ def gen_frames():
         yield (b"--frame\r\n" b"Content-Type: image/jpeg\r\n\r\n" + frame + b"\r\n")
 
 
+client = MQTTClient(AIO_USERNAME, AIO_KEY)
+client.on_connect = connected
+client.on_disconnect = disconnected
+client.on_message = message
+client.on_subscribe = subscribe
+client.connect()
+client.loop_background()
+
+
+def humidity():
+    value = random.randint(40, 80)
+    return value
+
+
+def temperature():
+    value1 = random.randint(14, 40)
+    return value1
+
+# humidity = humidity()
+# temperature = temperature(
+
+#view = view()
+def mqtt():
+    while True:
+        now = datetime.now()
+        today = date.today()
+        camera = cv2.VideoCapture(0)
+        def view():
+            # Compress an image, reducing its quality.
+            def compress_image(image, quality=25):
+                temp_image = Image.fromarray(image)
+                buffer = io.BytesIO()
+                temp_image.save(buffer, format='JPEG', quality=quality)
+                compressed_image = Image.open(buffer)
+                return np.array(compressed_image)
+
+            # Grab the webcamera's image.
+            ret, image = camera.read()
+            # Compress image.
+            image = compress_image(image, quality=25)
+            res, frame = cv2.imencode(" .jpg", image)
+            data = base64.b64encode(frame)
+            return data
+
+        view = view()
+
+
+        client.publish("Time", now.strftime("%H hours %M minutes %S seconds"))
+        client.publish("Today", today.strftime("%B %d, %Y"))
+        client.publish("AI_Camera", view)
+        # client.publish("Face", )
+        # client.publish("Name", )
+        # client.publish("Humidity", humidity)
+        # client.publish("Temperature", temperature)
+        time.sleep(10)
+        keyboard_input = cv2.waitKey(1)
+        if keyboard_input == 27:
+            break
+
+
 if __name__ == "__main__":
+    mqtt()
     app.run(debug=True)
-
-

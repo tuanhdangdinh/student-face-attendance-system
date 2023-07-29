@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Add Information</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Montserrat&display=swap');
+        body {
+            font-family:'Montserrat', serif;
+            font-size:25;
+            margin: 0;
+            padding: 0;
+            background-image: url('https://www.twog-architecture.com/Data/Sites/1/Product/51/vgu-6.jpg');
+            background-repeat: no-repeat;
+            background-attachment: fixed;
+            background-size: cover;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            border: black; /* Sets the border of the body element */
+            margin: 0; /* Removes default margin for the body element */
+            padding: 0;
+        }
+        form {rgb(218, 150, 150); 
+            background-color: white ;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0px 0px 10px 0px  rgba(0,0,0,0.1);
+            width: 300px;
+        }
+        h1 {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        input, select {
+            display: block;
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 10px;
+            border-radius: 4px;
+            border: 1px solid #b16565;
+            border-color: black;
+            box-sizing: border-box;
+        }
+        input[type="submit"] {
+            background-color: #4CAF50;
+            border-color: black;
+            color: rgb(255, 255, 255);
+            cursor: pointer;
+        }
+        input[type="submit"]:hover {
+            background-color: #45a049;
+            border-color: black;
+        }
+    </style>
+</head>
+<body>
+    <form action="/submit_info" method="post">
+        <h1> Please Enter Your Informations </h1>
+        <input type="text" name="name" placeholder="Enter your name" required>
+        <input type="email" name="email" placeholder="Enter your email" required>
+        <select name="userType" required>
+            <option value="">Select your user type</option>
+            <option value="student">Student</option>
+            <option value="teacher">Teacher</option>
+        </select>
+        <select name="classes" required>
+            <option value="">Select your classes</option>
+            <option value="Multidisciplinary">Multidisciplinary Project</option>
+            <option value="IT">Information Technology</option>
+            <option value="German">German</option>
+        </select>        
+        <input type="password" name="password" placeholder="Enter your password" required>
+        <input type="submit" value="Submit">
+    </form>
+</body>
+</html>
