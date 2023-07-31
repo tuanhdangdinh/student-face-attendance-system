@@ -372,7 +372,7 @@ def gen_frames():
 # mqtt
 AIO_FEED_ID = ["Today", "Time", "Humidity", "Temperature", "General_Vision", "AI_Camera", "Button", "number_student"]
 AIO_USERNAME = "NhanVGU"
-AIO_KEY = ""
+AIO_KEY = "aio_gvet99LMl863kV85YFivz9qpjGeq"
 
 
 def connected(client):
