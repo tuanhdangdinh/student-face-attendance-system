@@ -1,5 +1,4 @@
 from random import random
-from typing import List
 from flask import Flask, render_template
 from flask import request, redirect, url_for, Response, flash
 from werkzeug.security import check_password_hash
@@ -8,11 +7,11 @@ import os
 import cv2
 from datetime import datetime
 import firebase_admin
-from firebase_admin import credentials
-from firebase_admin import db
-from firebase_admin import storage
+from firebase_admin import credentials, db, storage
 from detection.face_recognition import detect_faces, align_face
 from detection.face_recognition import extract_features, match_face
+from mqtt_modules.face_detect import *
+from mqtt_modules.hardware import *
 from utils.configuration import load_yaml
 # mqtt
 import time
@@ -24,31 +23,9 @@ from Adafruit_IO import MQTTClient
 from datetime import date, datetime
 import io
 import imghdr
+import threading
 
-AIO_FEED_ID = ["Today", "Time", "Humidity", "Temperature", "AI_Camera"]
-AIO_USERNAME = "NhanVGU"
-AIO_KEY = ""
-
-
-def connected(client):
-    print("Connected to server!!!")
-    for things in AIO_FEED_ID:
-        client.subscribe(things)
-
-
-def subscribe(client, userdata, mid, granted_qos):
-    print("Subscribe successfully ...")
-
-
-def disconnected(client):
-    print("Disconnected ...")
-    sys.exit(1)
-
-
-def message(client, feed_id, payload):
-    print(f"AI result from {feed_id} : {payload}")
-
-
+# flask app
 config_file_path = load_yaml("configs/database.yaml")
 
 TEACHER_PASSWORD_HASH = config_file_path["teacher"]["password_hash"]
@@ -363,7 +340,7 @@ def select_class():
         for i in range(1, number_student):
             studentInfo = db.reference(f"Students/{i}").get()
             if match == studentInfo["name"]:
-                # Check if the selceted class is in the list of studentInfo['classes']
+                # Check if the selected class is in the list of studentInfo['classes']
                 print(studentInfo["classes"])
                 if selected_class in studentInfo["classes"]:
                     # Update the attendance in the database
@@ -392,6 +369,34 @@ def gen_frames():
         yield (b"--frame\r\n" b"Content-Type: image/jpeg\r\n\r\n" + frame + b"\r\n")
 
 
+# mqtt
+AIO_FEED_ID = ["Today", "Time", "Humidity", "Temperature", "General_Vision", "AI_Camera", "Button", "number_student"]
+AIO_USERNAME = "NhanVGU"
+AIO_KEY = "aio_NPeM36ekxECDRqoY02A97thQhQ45"
+
+
+def connected(client):
+    print("Connected to server!!!")
+    for things in AIO_FEED_ID:
+        client.subscribe(things)
+
+
+def subscribe(client, userdata, mid, granted_qos):
+    print("Subscribe successfully ...")
+
+
+def disconnected(client):
+    print("Disconnected ...")
+    sys.exit(1)
+
+
+def message(client, feed_id, payload):
+    print(f"AI result from {feed_id} : {payload}")
+    if feed_id == "Button":
+        values.append(payload)
+        write_to_file(values, "data.txt")
+
+
 client = MQTTClient(AIO_USERNAME, AIO_KEY)
 client.on_connect = connected
 client.on_disconnect = disconnected
@@ -410,48 +415,53 @@ def temperature():
     value1 = random.randint(14, 40)
     return value1
 
-# humidity = humidity()
-# temperature = temperature(
 
-#view = view()
+turn_on = turn_on_AC()
+client.publish("Button", turn_on)
+check = 1
+values = [1]
+write_to_file(values, "data.txt")
+
+
 def mqtt():
+    global check, chatbot
     while True:
         now = datetime.now()
         today = date.today()
-        camera = cv2.VideoCapture(0)
-        def view():
-            # Compress an image, reducing its quality.
-            def compress_image(image, quality=25):
-                temp_image = Image.fromarray(image)
-                buffer = io.BytesIO()
-                temp_image.save(buffer, format='JPEG', quality=quality)
-                compressed_image = Image.open(buffer)
-                return np.array(compressed_image)
+        humi = humidity()
+        tem = temperature()
+        view = view1()
+        face = faces()
+        # Information to database
+        ref = db.reference("Students")
+        # Obtain the last studentId number from the database
+        number_student = len(ref.get())
+        number_stu = f"There are {number_student - 1} students in the database"
 
-            # Grab the webcamera's image.
-            ret, image = camera.read()
-            # Compress image.
-            image = compress_image(image, quality=25)
-            res, frame = cv2.imencode(" .jpg", image)
-            data = base64.b64encode(frame)
-            return data
-
-        view = view()
-
-
+        # publish
         client.publish("Time", now.strftime("%H hours %M minutes %S seconds"))
         client.publish("Today", today.strftime("%B %d, %Y"))
-        client.publish("AI_Camera", view)
-        # client.publish("Face", )
-        # client.publish("Name", )
-        # client.publish("Humidity", humidity)
-        # client.publish("Temperature", temperature)
-        time.sleep(10)
-        keyboard_input = cv2.waitKey(1)
-        if keyboard_input == 27:
-            break
+        client.publish("General_Vision", view)
+        client.publish("AI Camera", face)
+        client.publish("Humidity", humi)
+        client.publish("Temperature", tem)
+        client.publish("number_student", number_stu)
+        if tem <= 20:
+            if check != 0:
+                client.publish("Button", 0)
+                check = 0
+        if tem > 20:
+            if check != 1:
+                client.publish("Button", 1)
+                check = 1
+        time.sleep(30)
 
+# thread for mqtt
+def run_mqtt():
+    mqtt_thread = threading.Thread(target=mqtt)
+    mqtt_thread.daemon = True
+    mqtt_thread.start()
 
 if __name__ == "__main__":
-    mqtt()
+    run_mqtt()
     app.run(debug=True)
